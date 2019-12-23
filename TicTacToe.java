@@ -5,57 +5,87 @@
  */
 package tictactoe;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 /**
  *
  * @author im5no
  */
-public class TicTacToe
+public class Model
 {
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args)
+    private final int _boardSize;
+    private final GameNode[][] _board;
+    
+    public Model(int boardSize)
     {
-        Controller controller = new Controller();
-        Model model = new Model(3);
-        View view = new View(model);
-
-        /* GAME LOOP */
-        while (!model.gameIsOver())
-        {
-            view.printGameBoard();
-            boolean playerMustSelectedValidCoordinate;
-            do
-            {
-                CoordinateToMark selectedCoordinate = view.getNextPlayerInput();
-                char nextPlayerSymbol = getNextCharacterSymbol();
-                view.notifyPlayersOfWhoseTurnItIs(nextPlayerSymbol);
-                boolean spotWasSuccessfulyMarked = controller.markSpotWithSymbol(
-                    nextPlayerSymbol,
-                    selectedCoordinate,
-                    model);
-                playerMustSelectedValidCoordinate = !spotWasSuccessfulyMarked;
-            }
-            while (playerMustSelectedValidCoordinate);
-            view.clearUI();
-        }
+        _boardSize = boardSize;
+        _board = new GameNode[boardSize][boardSize];
         
-        view.printGameBoard();
-        view.printVictoryDialog();
+        for (int y = 0; y < boardSize; y++)
+            for (int x = 0; x < boardSize; x++)
+                _board[y][x] = new GameNode();
+    }
+    
+    public int getBoardSize()
+    {
+        return _boardSize;
+    }
+    
+    public GameNode getNode(
+        int xIndex,
+        int yIndex)
+    {
+        return _board[yIndex][xIndex];
     }
     
     
-    
-    
-    private static final char[] DEFAULT_PLAYER_SYMBOLS = new char[]
+    public <TReturn> TReturn getAspectOfFirstRowThatMeetsCondition(
+        ICondition<GameLine> condition,
+        IProperty<TReturn, GameLine> property)
     {
-        'X',
-        'O'
-    };
-    private static int turnCount = 0;
-    private static char getNextCharacterSymbol()
+        for (int y = 0; y < _boardSize; y++)
+            if (condition.evaluate(getRow(y)))
+                return property.getProperty(getRow(y));
+        for (int x = 0; x < _boardSize; x++)
+            if (condition.evaluate(getColumn(x)))
+                return property.getProperty(getColumn(x));
+        return null;
+    }
+    
+    public boolean gameIsOver()
     {
-        return DEFAULT_PLAYER_SYMBOLS[
-            turnCount++ % DEFAULT_PLAYER_SYMBOLS.length];
+        for (int y = 0; y < _boardSize; y++)
+            if (getRow(y).representsVictory())
+                return true;
+        for (int x = 0; x < _boardSize; x++)
+            if (getColumn(x).representsVictory())
+                return true;
+        return false;
+    }
+    
+    public char getVictoriousSymbol()
+    {
+        for (int y = 0; y < _boardSize; y++)
+            if (getRow(y).representsVictory())
+                return _board[y][0].getSymbol();
+        for (int x = 0; x < _boardSize; x++)
+            if (getColumn(x).representsVictory())
+                return _board[0][x].getSymbol();
+        return ' ';
+    }
+    
+    private GameLine getRow(int rowIndex)
+    {
+        Collection<GameNode> rowNodes = Arrays.asList(_board[rowIndex]);
+        return new GameLine(rowNodes);
+    }
+    
+    private GameLine getColumn(int columnIndex)
+    {
+        GameLine column = new GameLine();
+        for (int i = 0; i < _boardSize; i++)
+            column.add(_board[i][columnIndex]);
+        return column;
     }
 }
