@@ -39,6 +39,20 @@ public class Model
         return _board[yIndex][xIndex];
     }
     
+    
+    public <TReturn> TReturn getAspectOfFirstRowThatMeetsCondition(
+        ICondition<GameLine> condition,
+        IProperty<TReturn, GameLine> property)
+    {
+        for (int y = 0; y < _boardSize; y++)
+            if (condition.evaluate(getRow(y)))
+                return property.getProperty(getRow(y));
+        for (int x = 0; x < _boardSize; x++)
+            if (condition.evaluate(getColumn(x)))
+                return property.getProperty(getColumn(x));
+        return null;
+    }
+    
     public boolean gameIsOver()
     {
         for (int y = 0; y < _boardSize; y++)
